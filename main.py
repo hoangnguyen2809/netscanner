@@ -1,19 +1,24 @@
 import socket
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+
+lock = Lock()
 
 def scan_port(target_ip, port, stats, open_ports):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
         result = sock.connect_ex((target_ip, port))
-        if result == 0:
-            # print(f"[+] Port {port} is open")
-            stats['open'] += 1
-            open_ports.append(port)
-        else:
-            # print(f"[-] Port {port} is closed")
-            stats['closed'] += 1
-        stats['total'] += 1
+        with lock:
+            stats['total'] += 1
+            if result == 0:
+                print(f"[+] Port {port} is open")
+                stats['open'] += 1
+                open_ports.append(port)
+            else:
+                print(f"[-] Port {port} is closed")
+                stats['closed'] += 1
         sock.close()
     except Exception as e:
         print(f"[-] Error on port {port}: {e}")
@@ -39,18 +44,21 @@ def main():
     parser = argparse.ArgumentParser(description="Mini Nmap - TCP Connect Scanner")
     parser.add_argument("--target", required=True, help="Target IP address")
     parser.add_argument("--port", help="Single port (e.g., 22) or port range (e.g., 20-80). If omitted, scans all ports.")
+    parser.add_argument("--threads", type=int, default=100, help="Number of threads to use (default: 100)")
 
     args = parser.parse_args()
     target = args.target
     ports = parse_ports(args.port)
 
-    print(f"[~] Scanning {target} on ports: {args.port if args.port else '1-65535'}")
+    print(f"[~] Scanning {target} on ports: {args.port if args.port else '1-65535'} with {args.threads} threads")
 
     stats = {'total': 0, 'open': 0, 'closed': 0}
     open_ports = []
 
-    for port in ports:
-        scan_port(target, port, stats, open_ports)
+    with ThreadPoolExecutor(max_workers=args.threads) as executor:
+        futures = [executor.submit(scan_port, target, port, stats, open_ports) for port in ports]
+        for _ in as_completed(futures):
+            pass  # Just wait for all threads to finish
 
     print("\n[~] Scan Summary:")
     print(f"    Total ports scanned: {stats['total']}")
