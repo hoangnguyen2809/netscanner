@@ -5,17 +5,25 @@ from threading import Lock
 
 lock = Lock()
 
-def scan_port(target_ip, port, stats, open_ports):
+def scan_port(target_ip, port, stats, open_ports, banners):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
         result = sock.connect_ex((target_ip, port))
+
         with lock:
             stats['total'] += 1
             if result == 0:
-                print(f"[+] Port {port} is open")
+                try:
+                    sock.sendall(b"Hello\r\n")  # Send generic probe
+                    banner = sock.recv(1024).decode(errors="ignore").strip()
+                except:
+                    banner = "No banner"
+                
+                print(f"[+] Port {port} is open — Banner: {banner}")
                 stats['open'] += 1
                 open_ports.append(port)
+                banners[port] = banner
             else:
                 print(f"[-] Port {port} is closed")
                 stats['closed'] += 1
@@ -31,14 +39,16 @@ def parse_ports(port_str):
     start, end = port_str.split('-')
     return range(int(start), int(end) + 1)
 
-def print_open_port_info(open_ports):
+def print_open_port_info(open_ports, banners):
     print("\n[~] Open Ports Info:")
     for port in open_ports:
         try:
             service = socket.getservbyport(port, 'tcp')
         except:
             service = "Unknown service"
-        print(f"    - Port {port}: {service}")
+        banner = banners.get(port, "No banner")
+        print(f"    - Port {port}: {service} | Banner: {banner}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Mini Nmap - TCP Connect Scanner")
@@ -49,6 +59,7 @@ def main():
     args = parser.parse_args()
     target = args.target
     ports = parse_ports(args.port)
+    banners = {}
 
     print(f"[~] Scanning {target} on ports: {args.port if args.port else '1-65535'} with {args.threads} threads")
 
@@ -56,7 +67,7 @@ def main():
     open_ports = []
 
     with ThreadPoolExecutor(max_workers=args.threads) as executor:
-        futures = [executor.submit(scan_port, target, port, stats, open_ports) for port in ports]
+        futures = [executor.submit(scan_port, target, port, stats, open_ports, banners)for port in ports]
         for _ in as_completed(futures):
             pass  # Just wait for all threads to finish
 
@@ -66,7 +77,7 @@ def main():
     print(f"    Closed ports:        {stats['closed']}")
 
     if open_ports:
-        print_open_port_info(open_ports)
+        print_open_port_info(open_ports, banners)
     else:
         print("[~] No open ports found.")
 
