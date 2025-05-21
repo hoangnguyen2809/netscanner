@@ -53,7 +53,6 @@ def print_open_port_info(open_ports, banners):
         banner = banners.get(port, "No banner")
         print(f"    - Port {port}: {service} | Banner: {banner}")
 
-
 def main():
     parser = argparse.ArgumentParser(description="Mini Nmap - TCP Connect Scanner")
     parser.add_argument("--target", required=True, help="Target IP address")
