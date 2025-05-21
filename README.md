@@ -1,21 +1,21 @@
-# 🔎 MiniNmap — A Lightweight TCP/UDP Port Scanner
+# minimap — lightweight TCP Port Scanner
 
-MiniNmap is a simplified network scanner built in Python, designed for learning and light scanning tasks. It mimics some basic features of the original Nmap tool, allowing users to scan specific ports, port ranges, or the entire port space, and includes basic OS fingerprinting and optional UDP scanning.
-
----
-
-## 🚀 Features
-
-- ✅ TCP Connect Scanning (full handshake)
-- ✅ Port range or single port support (`--port 22` or `--port 20-80`)
-- ✅ Basic OS Fingerprinting (via TTL from ping)
-- ✅ Multi-threaded scanning for speed
-- ✅ Optional output to file (`--output result.txt`)
-- ✅ Clean summary report
+MiniNmap is a simplified network scanner built in Python, designed for learning and light scanning tasks. It mimics some basic features of the original Nmap tool, allowing users to scan specific ports, port ranges, or the entire port space, and includes basic OS fingerprinting,
 
 ---
 
-## 🛠️ Installation
+## Features
+
+- TCP Connect Scanning (full handshake)
+- Port range or single port support (`--port 22` or `--port 20-80`)
+- Basic OS Fingerprinting (via TTL from ping)
+- Multi-threaded scanning for speed
+- Optional output to file (`--output result.txt`)
+- Clean summary report
+
+---
+
+## Installation
 
 Requires Python 3.6+.
 
@@ -29,10 +29,10 @@ pip install -r requirements.txt  # if applicable (e.g. for tqdm/spinner)
 
 ---
 
-## 📦 Usage
+## Usage
 
 ```bash
-python scanner.py --target <IP/hostname> [--port <port or port-range>] [--udp] [--threads N] [--timeout T] [--output result.txt]
+python scanner.py --target <IP/hostname> [--port <port or port-range>] [--threads N] [--timeout T] [--output result.txt]
 ```
 
 ### Examples
@@ -46,17 +46,13 @@ python scanner.py --target scanme.nmap.org
 python scanner.py --target 192.168.1.10 --port 20-80
 
 
-# Scan UDP ports 53 and 123
-python scanner.py --target 192.168.1.10 --port 53,123 --udp
-
-
 # Scan port 443 and save results to a file
 python scanner.py --target 192.168.1.10 --port 443 --output results.txt
 ```
 
 ---
 
-## 🔍 OS Fingerprinting
+## OS Fingerprinting
 
 MiniNmap includes basic OS guessing based on TTL values from ICMP `ping`. While not highly accurate, it gives a rough indication:
 
@@ -66,7 +62,7 @@ MiniNmap includes basic OS guessing based on TTL values from ICMP `ping`. While 
 
 ---
 
-## 📄 Output Example
+## Output Example
 
 ```text
 [~] Scan target: 192.168.1.1
